@@ -142,12 +142,15 @@ fun BrowserScreen() {
                     }
                 }
             }
-            BrowserWebView(
-                onCreated = { webView = it },
-                onPageStarted = { url -> currentUrl = url; address = url; isLoading = true },
-                onPageFinished = { url -> currentUrl = url; address = url; isLoading = false; progress = 1f },
-                onProgress = { value -> progress = value / 100f; isLoading = value < 100 }
-            )
+            if (currentUrl.isNotBlank()) {
+                BrowserWebView(
+                    initialUrl = currentUrl,
+                    onCreated = { webView = it },
+                    onPageStarted = { url -> currentUrl = url; address = url; isLoading = true },
+                    onPageFinished = { url -> currentUrl = url; address = url; isLoading = false; progress = 1f },
+                    onProgress = { value -> progress = value / 100f; isLoading = value < 100 }
+                )
+            }
         }
 
         Row(
@@ -173,6 +176,7 @@ fun BrowserScreen() {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun BrowserWebView(
+    initialUrl: String,
     onCreated: (WebView) -> Unit,
     onPageStarted: (String) -> Unit,
     onPageFinished: (String) -> Unit,
@@ -200,7 +204,9 @@ private fun BrowserWebView(
                 webChromeClient = object : WebChromeClient() {
                     override fun onProgressChanged(view: WebView, newProgress: Int) = onProgress(newProgress)
                 }
+                setBackgroundColor(android.graphics.Color.rgb(8, 9, 11))
                 onCreated(this)
+                loadUrl(initialUrl)
             }
         }
     )
