@@ -42,13 +42,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import java.net.URLEncoder
 
 private const val HOME_URL = "https://www.google.com"
-private val ink = Color(0xFF080A10)
-private val glass = Color(0xB81C2330)
-private val glassStrong = Color(0xE61B222E)
-private val outline = Color(0x36DCE7F5)
+private val ink = Color(0xFF08090B)
+private val obsidianPanel = Color(0xFF14161A)
+private val obsidianRaised = Color(0xFF1B1E23)
+private val edge = Color(0xFF30343B)
 private val white = Color(0xFFF4F7FC)
 private val muted = Color(0xFF9BA8BA)
-private val accent = Color(0xFFB9D8FF)
+private val accent = Color(0xFFD9DDE3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,15 +92,15 @@ fun BrowserScreen() {
     Box(
         Modifier.fillMaxSize().background(
             Brush.linearGradient(
-                listOf(Color(0xFF111B2A), ink, Color(0xFF10131D))
+                listOf(Color(0xFF101114), ink, Color(0xFF10131D))
             )
         )
     ) {
-        // Soft ambient light gives the glass surfaces depth without expensive blur effects.
+        // Restrained ambient shading gives the obsidian surfaces depth without expensive blur effects.
         Box(
             Modifier.align(Alignment.TopEnd).size(260.dp)
                 .background(
-                    Brush.radialGradient(listOf(Color(0x263D8DCE), Color.Transparent)),
+                    Brush.radialGradient(listOf(Color(0xFF202329), Color.Transparent)),
                     CircleShape
                 )
         )
@@ -111,10 +111,10 @@ fun BrowserScreen() {
             ) {
                 Box(
                     Modifier.size(38.dp).shadow(12.dp, RoundedCornerShape(13.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFFF7FAFF), Color(0xFFB9C9DE))), RoundedCornerShape(13.dp)),
+                        .background(Brush.linearGradient(listOf(Color(0xFFF1F2F4), Color(0xFFBFC4CC))), RoundedCornerShape(13.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("G", color = Color(0xFF101722), fontSize = 25.sp, fontWeight = FontWeight.Black)
+                    Text("G", color = Color(0xFF111317), fontSize = 25.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
@@ -123,7 +123,7 @@ fun BrowserScreen() {
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
-                    Modifier.clip(CircleShape).background(glass).border(1.dp, outline, CircleShape)
+                    Modifier.clip(CircleShape).background(obsidianPanel).border(1.dp, edge, CircleShape)
                         .clickable { showMenu = true }.padding(10.dp)
                 ) {
                     Icon(Icons.Default.Tune, contentDescription = "Browser options", tint = white, modifier = Modifier.size(19.dp))
@@ -133,8 +133,8 @@ fun BrowserScreen() {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(56.dp)
                     .shadow(14.dp, RoundedCornerShape(20.dp))
-                    .background(glassStrong, RoundedCornerShape(20.dp))
-                    .border(1.dp, outline, RoundedCornerShape(20.dp))
+                    .background(obsidianRaised, RoundedCornerShape(20.dp))
+                    .border(1.dp, edge, RoundedCornerShape(20.dp))
                     .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -186,10 +186,10 @@ fun BrowserScreen() {
                     ) {
                         Box(
                             Modifier.size(88.dp).shadow(24.dp, RoundedCornerShape(28.dp))
-                                .background(Brush.linearGradient(listOf(Color(0xFFF7FAFF), Color(0xFF9EB9D9))), RoundedCornerShape(28.dp)),
+                                .background(Brush.linearGradient(listOf(Color(0xFFF1F2F4), Color(0xFFBFC4CC))), RoundedCornerShape(28.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("G", color = Color(0xFF101722), fontSize = 61.sp, fontWeight = FontWeight.Black)
+                            Text("G", color = Color(0xFF111317), fontSize = 61.sp, fontWeight = FontWeight.Black)
                         }
                         Spacer(Modifier.height(25.dp))
                         Text("The web, in your element.", color = white, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
@@ -202,7 +202,7 @@ fun BrowserScreen() {
                             QuickLink("Wikipedia", Icons.Default.MenuBook) { navigate("https://www.wikipedia.org") }
                         }
                         Spacer(Modifier.height(24.dp))
-                        GlassCard(Modifier.fillMaxWidth()) {
+                        ObsidianCard(Modifier.fillMaxWidth()) {
                             Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(10.dp))
@@ -226,12 +226,12 @@ fun BrowserScreen() {
                 }
             }
 
-            // Floating glass navigation dock.
+            // Floating obsidian navigation dock.
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)
                     .shadow(20.dp, RoundedCornerShape(25.dp))
-                    .background(glassStrong, RoundedCornerShape(25.dp))
-                    .border(1.dp, outline, RoundedCornerShape(25.dp))
+                    .background(obsidianRaised, RoundedCornerShape(25.dp))
+                    .border(1.dp, edge, RoundedCornerShape(25.dp))
                     .padding(horizontal = 7.dp, vertical = 5.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
@@ -241,8 +241,8 @@ fun BrowserScreen() {
                 DockButton(Icons.Default.ArrowForward, "Forward", enabled = webView?.canGoForward() == true) { webView?.goForward() }
                 DockButton(Icons.Default.Refresh, "Reload", enabled = currentUrl.isNotBlank()) { webView?.reload() }
                 Box(
-                    Modifier.clip(RoundedCornerShape(15.dp)).background(Color(0x263D8DCE))
-                        .border(1.dp, Color(0x557EB9F2), RoundedCornerShape(15.dp))
+                    Modifier.clip(RoundedCornerShape(15.dp)).background(Color(0xFF202329))
+                        .border(1.dp, Color(0xFF424750), RoundedCornerShape(15.dp))
                         .clickable { showTabs = true }.padding(horizontal = 13.dp, vertical = 9.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -259,7 +259,7 @@ fun BrowserScreen() {
     if (showMenu) {
         ModalBottomSheet(
             onDismissRequest = { showMenu = false },
-            containerColor = Color(0xFF171F2B),
+            containerColor = Color(0xFF15171B),
             contentColor = white,
             dragHandle = { BottomSheetDefaults.DragHandle(color = muted) }
         ) {
@@ -288,13 +288,13 @@ fun BrowserScreen() {
     if (showTabs) {
         ModalBottomSheet(
             onDismissRequest = { showTabs = false },
-            containerColor = Color(0xFF171F2B),
+            containerColor = Color(0xFF15171B),
             contentColor = white,
             dragHandle = { BottomSheetDefaults.DragHandle(color = muted) }
         ) {
             Text("Your tabs", Modifier.padding(horizontal = 22.dp), color = white, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(14.dp))
-            GlassCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            ObsidianCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Language, contentDescription = null, tint = accent)
@@ -318,7 +318,7 @@ fun BrowserScreen() {
 @Composable
 private fun QuickLink(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(17.dp)).background(glass).border(1.dp, outline, RoundedCornerShape(17.dp))
+        Modifier.clip(RoundedCornerShape(17.dp)).background(obsidianPanel).border(1.dp, edge, RoundedCornerShape(17.dp))
             .clickable(onClick = onClick).padding(horizontal = 15.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -329,11 +329,11 @@ private fun QuickLink(label: String, icon: androidx.compose.ui.graphics.vector.I
 }
 
 @Composable
-private fun GlassCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+private fun ObsidianCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier.shadow(12.dp, RoundedCornerShape(20.dp))
-            .background(glass, RoundedCornerShape(20.dp))
-            .border(1.dp, outline, RoundedCornerShape(20.dp))
+            .background(obsidianPanel, RoundedCornerShape(20.dp))
+            .border(1.dp, edge, RoundedCornerShape(20.dp))
     ) { content() }
 }
 
@@ -349,9 +349,9 @@ private fun DockButton(
             .padding(horizontal = 9.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(icon, contentDescription = label, tint = if (enabled) white else Color(0xFF596474), modifier = Modifier.size(19.dp))
+        Icon(icon, contentDescription = label, tint = if (enabled) white else Color(0xFF626873), modifier = Modifier.size(19.dp))
         Spacer(Modifier.height(2.dp))
-        Text(label, color = if (enabled) muted else Color(0xFF596474), fontSize = 9.sp)
+        Text(label, color = if (enabled) muted else Color(0xFF626873), fontSize = 9.sp)
     }
 }
 
@@ -366,7 +366,7 @@ private fun SheetAction(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 22.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.size(38.dp).background(glass, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(38.dp).background(obsidianPanel, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))
         }
         Spacer(Modifier.width(13.dp))
