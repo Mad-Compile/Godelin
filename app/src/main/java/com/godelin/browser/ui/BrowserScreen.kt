@@ -163,53 +163,39 @@ fun BrowserScreen() {
         Box(Modifier.align(Alignment.TopEnd).size(260.dp).background(Brush.radialGradient(listOf(Color(0xFF202329), Color.Transparent)), CircleShape))
         Column(Modifier.fillMaxSize()) {
             Row(
-                Modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = 18.dp, bottom = 16.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 14.dp)
+                    .height(58.dp).shadow(12.dp, RoundedCornerShape(16.dp))
+                    .background(obsidianRaised, RoundedCornerShape(16.dp))
+                    .border(1.dp, edge, RoundedCornerShape(16.dp))
+                    .padding(start = 16.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    Modifier.size(38.dp).shadow(12.dp, RoundedCornerShape(13.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFFF1F2F4), Color(0xFFBFC4CC))), RoundedCornerShape(13.dp)),
-                    contentAlignment = Alignment.Center
-                ) { Text("G", color = Color(0xFF111317), fontSize = 25.sp, fontWeight = FontWeight.Black) }
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = accent, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("GODELIN", color = white, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.5.sp)
-                    Text("YOUR SPACE ON THE WEB", color = muted, fontSize = 9.sp, letterSpacing = 1.25.sp)
-                }
-                Spacer(Modifier.weight(1f))
-                Box(
-                    Modifier.clip(CircleShape).background(obsidianPanel).border(1.dp, edge, CircleShape)
-                        .clickable { showMenu = true }.padding(10.dp)
-                ) { Icon(Icons.Default.Tune, contentDescription = "Browser options", tint = white, modifier = Modifier.size(19.dp)) }
-            }
-
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(56.dp).shadow(14.dp, RoundedCornerShape(20.dp))
-                    .background(obsidianRaised, RoundedCornerShape(20.dp)).border(1.dp, edge, RoundedCornerShape(20.dp))
-                    .padding(horizontal = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(if (currentUrl.startsWith("https://")) Icons.Default.Lock else Icons.Default.Search, contentDescription = "Connection or search", tint = accent, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(11.dp))
                 BasicTextField(
                     value = address,
                     onValueChange = { address = it },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
-                    textStyle = TextStyle(color = white, fontSize = 14.sp),
+                    textStyle = TextStyle(color = white, fontSize = 15.sp),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                     keyboardActions = KeyboardActions(onGo = { navigate(address) }),
                     decorationBox = { inner -> Box {
-                        if (address.isEmpty()) Text("Search or enter website", color = muted, fontSize = 13.sp)
+                        if (address.isEmpty()) Text("Search Godelin or enter URL", color = muted, fontSize = 14.sp)
                         inner()
                     } }
                 )
                 if (address.isNotEmpty()) {
-                    IconButton(onClick = { address = "" }, modifier = Modifier.size(30.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear address", tint = muted, modifier = Modifier.size(17.dp))
+                    IconButton(onClick = { address = "" }, modifier = Modifier.size(34.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear address", tint = muted, modifier = Modifier.size(18.dp))
                     }
-                } else {
-                    Icon(Icons.Default.MicNone, contentDescription = "Voice search (coming soon)", tint = muted, modifier = Modifier.size(19.dp))
+                }
+                Box(
+                    Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
+                        .clickable { showMenu = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = "Browser options", tint = accent, modifier = Modifier.size(21.dp))
                 }
             }
 
