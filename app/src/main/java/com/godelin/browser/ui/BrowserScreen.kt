@@ -161,7 +161,11 @@ fun BrowserScreen() {
 
     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF101114), ink, Color(0xFF10131D))))) {
         Box(Modifier.align(Alignment.TopEnd).size(260.dp).background(Brush.radialGradient(listOf(Color(0xFF202329), Color.Transparent)), CircleShape))
-        Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier.fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 14.dp)
                     .height(58.dp).shadow(12.dp, RoundedCornerShape(16.dp))
@@ -205,32 +209,27 @@ fun BrowserScreen() {
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (currentUrl.isBlank()) {
-                    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Box(
-                            Modifier.size(88.dp).shadow(24.dp, RoundedCornerShape(28.dp))
-                                .background(Brush.linearGradient(listOf(Color(0xFFF1F2F4), Color(0xFFBFC4CC))), RoundedCornerShape(28.dp)),
+                            Modifier.size(104.dp)
+                                .shadow(26.dp, RoundedCornerShape(32.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFFF4F5F7), Color(0xFFBFC4CC))
+                                    ),
+                                    RoundedCornerShape(32.dp)
+                                ),
                             contentAlignment = Alignment.Center
-                        ) { Text("G", color = Color(0xFF111317), fontSize = 61.sp, fontWeight = FontWeight.Black) }
-                        Spacer(Modifier.height(25.dp))
-                        Text("The web, in your element.", color = white, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.height(8.dp))
-                        Text("A calmer space to explore what's next.", color = muted, fontSize = 13.sp)
-                        Spacer(Modifier.height(30.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            QuickLink("Google", Icons.Default.Search) { navigate("https://www.google.com") }
-                            QuickLink("YouTube", Icons.Default.PlayArrow) { navigate("https://www.youtube.com") }
-                            QuickLink("Wikipedia", Icons.Default.MenuBook) { navigate("https://www.wikipedia.org") }
-                        }
-                        Spacer(Modifier.height(24.dp))
-                        ObsidianCard(Modifier.fillMaxWidth()) {
-                            Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(10.dp))
-                                Column {
-                                    Text("Made for focused browsing", color = white, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                                    Text("Your browser. Your pace.", color = muted, fontSize = 11.sp)
-                                }
-                            }
+                        ) {
+                            Text(
+                                "G",
+                                color = Color(0xFF111317),
+                                fontSize = 72.sp,
+                                fontWeight = FontWeight.Black
+                            )
                         }
                     }
                 }
