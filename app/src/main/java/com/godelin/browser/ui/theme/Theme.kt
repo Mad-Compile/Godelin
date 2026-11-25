@@ -7,12 +7,15 @@ import androidx.compose.runtime.Composable
 private val GodelinColors = darkColorScheme(
     primary = GodelinAccent,
     onPrimary = GodelinBlack,
+    secondary = GodelinMuted,
+    onSecondary = GodelinBlack,
     background = GodelinBlack,
     onBackground = GodelinWhite,
     surface = GodelinSurface,
     onSurface = GodelinWhite,
     surfaceVariant = GodelinElevated,
-    onSurfaceVariant = GodelinMuted
+    onSurfaceVariant = GodelinMuted,
+    outline = GodelinMuted
 )
 
 @Composable
