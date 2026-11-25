@@ -1,0 +1,1 @@
+# Godelin browser ProGuard rules.
