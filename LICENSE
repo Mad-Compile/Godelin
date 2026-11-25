@@ -1,17 +1,17 @@
+GODELIN PROPRIETARY LICENSE
+
 Copyright (c) 2026 Mad-Compile. All rights reserved.
 
-Godelin is proprietary software.
+Godelin is proprietary software owned by Mad-Compile.
 
-Permission is not granted to any person or entity to copy, modify, publish,
-distribute, sublicense, sell, or otherwise use this software, in whole or in
-part, for commercial purposes, without prior written permission from
-Mad-Compile.
+Source distribution or use for commercial purposes without prior written
+permission from Mad-Compile is not allowed.
 
-Any use, reproduction, or distribution not expressly authorized in writing by
-Mad-Compile is prohibited.
+No license or permission is granted to distribute the source code or use
+Godelin for commercial purposes unless Mad-Compile has provided prior written
+authorization.
 
-For permission or licensing inquiries, contact the repository owner.
+Third-party components, dependencies, and assets may be subject to separate
+licenses and terms. Those separate licenses and terms continue to apply.
 
-Third-party components, dependencies, and assets are not covered by this notice
-where their respective licenses or terms provide otherwise. Those components
-remain subject to their own applicable licenses and terms.
+For permission requests, contact the owner of the Mad-Compile organization.
