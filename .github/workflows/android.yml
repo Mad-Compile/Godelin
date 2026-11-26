@@ -27,6 +27,36 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
+      - name: Create temporary CI-only release key
+        shell: bash
+        run: |
+          STORE_FILE="$RUNNER_TEMP/godelin-ci-validation.jks"
+          keytool -genkeypair -noprompt -v \
+            -keystore "$STORE_FILE" \
+            -storetype JKS \
+            -storepass "temporary-ci-only" \
+            -keypass "temporary-ci-only" \
+            -alias "godelin-ci-validation" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 365 \
+            -dname "CN=Godelin CI Validation, O=Mad Compile, C=IN"
+          chmod 600 "$STORE_FILE"
+          echo "GODELIN_RELEASE_STORE_FILE=$STORE_FILE" >> "$GITHUB_ENV"
+
+      - name: Build and verify signed release APK
+        env:
+          GODELIN_RELEASE_STORE_PASSWORD: "temporary-ci-only"
+          GODELIN_RELEASE_KEY_ALIAS: "godelin-ci-validation"
+          GODELIN_RELEASE_KEY_PASSWORD: "temporary-ci-only"
+        run: |
+          gradle --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+
+      - name: Remove temporary CI signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/godelin-ci-validation.jks"
+
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - name: Upload debug APK
