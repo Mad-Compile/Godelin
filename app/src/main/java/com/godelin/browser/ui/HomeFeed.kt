@@ -2,6 +2,7 @@ package com.godelin.browser.ui
 
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -17,11 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Grain
@@ -56,6 +59,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -108,7 +114,7 @@ private data class WeatherSnapshot(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
+fun GodelinHomeFeed(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, onSearch: () -> Unit) {
     val context = LocalContext.current
     val preferences = remember(context) {
         context.getSharedPreferences("godelin_home", Context.MODE_PRIVATE)
@@ -180,13 +186,14 @@ fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-            .padding(top = 16.dp, bottom = 28.dp)
-    ) {
+    Box(Modifier.fillMaxSize().background(Color(0xFF050608))) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(top = 18.dp, bottom = 126.dp)
+        ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -220,6 +227,35 @@ fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
         }
 
         Spacer(Modifier.height(20.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Quick access",
+                color = colors.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                "Your favourite places",
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            ShortcutTile("Add new", Icons.Default.Add, Modifier.weight(1f), onAddShortcut)
+            ShortcutTile("Google", Icons.Default.Search, Modifier.weight(1f)) { onNavigate("google.com") }
+            ShortcutTile("YouTube", Icons.Default.PlayCircleOutline, Modifier.weight(1f)) { onNavigate("youtube.com") }
+            ShortcutTile("Wikipedia", Icons.Default.MenuBook, Modifier.weight(1f)) { onNavigate("wikipedia.org") }
+        }
+
+        Spacer(Modifier.height(22.dp))
         WeatherPanel(
             city = city,
             weather = weather,
@@ -320,22 +356,12 @@ fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(28.dp))
-        Text(
-            text = "Shortcuts",
-            color = colors.onSurface,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+    }
+
+        HomeSearchWidget(
+            onClick = onSearch,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 20.dp, vertical = 14.dp)
         )
-        Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ShortcutChip("Google", Icons.Default.Search, Modifier.weight(1f)) { onNavigate("google.com") }
-            ShortcutChip("YouTube", Icons.Default.PlayCircleOutline, Modifier.weight(1f)) { onNavigate("youtube.com") }
-            ShortcutChip("Wikipedia", Icons.Default.MenuBook, Modifier.weight(1f)) { onNavigate("wikipedia.org") }
-        }
     }
 
     if (showCityPicker) {
@@ -417,6 +443,76 @@ fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
                     }
                     HorizontalDivider(color = colors.outlineVariant)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortcutTile(
+    label: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            Modifier.size(50.dp).clip(CircleShape).background(Color(0xFF202431)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = Color(0xFFC5CEFF), modifier = Modifier.size(22.dp))
+        }
+        Spacer(Modifier.height(7.dp))
+        Text(label, color = colors.onSurface, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+    }
+}
+
+@Composable
+private fun HomeSearchWidget(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(25.dp),
+        color = Color(0xFFFCFDFD),
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF343843), modifier = Modifier.size(21.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "Search or enter a web address",
+                    color = Color(0xFF535762),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(width = 58.dp, height = 56.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFF7664ED), Color(0xFFFF4F91))))
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Search, contentDescription = "Start a web search", tint = Color.White, modifier = Modifier.size(24.dp))
             }
         }
     }
