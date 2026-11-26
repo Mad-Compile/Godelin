@@ -247,31 +247,30 @@ private fun findLatestRelease(context: Context): UpdateState {
     }
 
     val assets = json.optJSONArray("assets") ?: error("The latest release has no downloadable assets.")
-    var apkName: String? = null
+    val expectedApkName = "Godelin-v$tag.apk"
     var apkUrl: String? = null
     var checksumUrl: String? = null
     for (i in 0 until assets.length()) {
         val asset = assets.optJSONObject(i) ?: continue
         val name = asset.optString("name")
         val url = asset.optString("browser_download_url")
-        if (name.endsWith(".apk", ignoreCase = true) && isHttpsUrl(url)) {
-            apkName = name
+        if (name == expectedApkName && isGitHubAssetUrl(url)) {
             apkUrl = url
         }
     }
-    val checksumName = apkName?.plus(".sha256")
+    val checksumName = "$expectedApkName.sha256"
     for (i in 0 until assets.length()) {
         val asset = assets.optJSONObject(i) ?: continue
         if (asset.optString("name") == checksumName) {
             val url = asset.optString("browser_download_url")
-            if (isHttpsUrl(url)) checksumUrl = url
+            if (isGitHubAssetUrl(url)) checksumUrl = url
         }
     }
     return UpdateState.Available(
         GodelinRelease(
             version = tag,
             notes = json.optString("body"),
-            apkName = requireNotNull(apkName) { "This GitHub release does not contain a Godelin APK." },
+            apkName = expectedApkName,
             apkUrl = requireNotNull(apkUrl),
             checksumUrl = requireNotNull(checksumUrl) { "This release is missing its APK checksum file." }
         )
@@ -408,8 +407,10 @@ private fun requestText(
     }
 }
 
-private fun isHttpsUrl(value: String): Boolean =
-    runCatching { Uri.parse(value).scheme == "https" }.getOrDefault(false)
+private fun isGitHubAssetUrl(value: String): Boolean = runCatching {
+    val uri = Uri.parse(value)
+    uri.scheme == "https" && uri.host == "github.com"
+}.getOrDefault(false)
 
 private fun compareVersions(left: String, right: String): Int {
     val leftParts = versionParts(left)
@@ -420,7 +421,13 @@ private fun compareVersions(left: String, right: String): Int {
         val b = rightParts.getOrElse(index) { 0 }
         if (a != b) return a.compareTo(b)
     }
-    return 0
+    val leftIsPrerelease = left.contains('-')
+    val rightIsPrerelease = right.contains('-')
+    return when {
+        leftIsPrerelease == rightIsPrerelease -> 0
+        leftIsPrerelease -> -1
+        else -> 1
+    }
 }
 
 private fun versionParts(value: String): List<Int> =
