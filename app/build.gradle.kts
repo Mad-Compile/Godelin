@@ -1,8 +1,37 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// Local-only debug signing. Keep secrets.json outside any assets/res directory:
+// anything under src/debug/assets would be packaged into the APK.
+val debugSecretsFile = rootProject.file("app/src/debug/secrets.json")
+val debugSigning = if (debugSecretsFile.isFile) {
+    try {
+        val root = JsonSlurper().parse(debugSecretsFile) as? Map<*, *>
+        val signing = root?.get("signing") as? Map<*, *>
+        if (signing?.get("configured") == true) signing else null
+    } catch (error: Exception) {
+        throw GradleException("Could not read app/src/debug/secrets.json. Check that it contains valid JSON.", error)
+    }
+} else null
+
+fun signingValue(name: String): String? =
+    (debugSigning?.get(name) as? String)?.takeIf { it.isNotBlank() }
+
+val debugKeystorePath = signingValue("keystore_path")
+val debugKeystorePassword = signingValue("keystore_password")
+val debugKeyAlias = signingValue("key_alias")
+val debugKeyPassword = signingValue("key_password")
+val hasCustomDebugSigning = listOf(
+    debugKeystorePath,
+    debugKeystorePassword,
+    debugKeyAlias,
+    debugKeyPassword
+).all { !it.isNullOrBlank() }
 
 val releaseStoreFile = System.getenv("GODELIN_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("GODELIN_RELEASE_STORE_PASSWORD")
@@ -28,6 +57,14 @@ android {
     }
 
     signingConfigs {
+        if (hasCustomDebugSigning) {
+            create("localDebug") {
+                storeFile = rootProject.file(requireNotNull(debugKeystorePath))
+                storePassword = requireNotNull(debugKeystorePassword)
+                keyAlias = requireNotNull(debugKeyAlias)
+                keyPassword = requireNotNull(debugKeyPassword)
+            }
+        }
         if (hasReleaseSigning) {
             create("release") {
                 storeFile = file(requireNotNull(releaseStoreFile))
@@ -39,6 +76,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Falls back to Android's standard debug key when local secrets are absent/incomplete.
+            if (hasCustomDebugSigning) {
+                signingConfig = signingConfigs.getByName("localDebug")
+            }
+        }
         release {
             isMinifyEnabled = false
             if (hasReleaseSigning) {
