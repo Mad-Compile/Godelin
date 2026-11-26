@@ -1,0 +1,102 @@
+name: Godelin Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: godelin-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Sign and publish Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release tag
+        shell: bash
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tags must use semantic version form, for example v0.1.1"
+            exit 1
+          fi
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Validate signing secrets and prepare keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GODELIN_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.GODELIN_RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.GODELIN_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.GODELIN_RELEASE_KEY_PASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::A required Godelin release signing secret is missing. See README.md → Signed releases."
+              exit 1
+            fi
+          done
+          STORE_FILE="$RUNNER_TEMP/godelin-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$STORE_FILE"
+          chmod 600 "$STORE_FILE"
+          if ! keytool -list -keystore "$STORE_FILE" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::The release keystore, password, or alias is invalid."
+            rm -f "$STORE_FILE"
+            exit 1
+          fi
+          echo "GODELIN_RELEASE_STORE_FILE=$STORE_FILE" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        shell: bash
+        env:
+          GODELIN_RELEASE_STORE_PASSWORD: ${{ secrets.GODELIN_RELEASE_STORE_PASSWORD }}
+          GODELIN_RELEASE_KEY_ALIAS: ${{ secrets.GODELIN_RELEASE_KEY_ALIAS }}
+          GODELIN_RELEASE_KEY_PASSWORD: ${{ secrets.GODELIN_RELEASE_KEY_PASSWORD }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))
+          echo "GODELIN_VERSION_NAME=$VERSION" >> "$GITHUB_ENV"
+          echo "GODELIN_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          gradle --no-daemon :app:assembleRelease
+          APK_SOURCE="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK_SOURCE"
+          APK_NAME="Godelin-${GITHUB_REF_NAME}.apk"
+          cp "$APK_SOURCE" "$APK_NAME"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK_NAME"
+          sha256sum "$APK_NAME" > "$APK_NAME.sha256"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "Godelin-${GITHUB_REF_NAME}.apk" \
+            "Godelin-${GITHUB_REF_NAME}.apk.sha256" \
+            --title "Godelin ${GITHUB_REF_NAME#v}" \
+            --generate-notes
+
+      - name: Remove signing keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/godelin-release.jks"
