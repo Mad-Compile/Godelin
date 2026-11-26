@@ -7,5 +7,3 @@ local.properties
 private-signing/
 release-signing/
 
-# Local-only development configuration and credentials
-app/src/debug/secrets.json
