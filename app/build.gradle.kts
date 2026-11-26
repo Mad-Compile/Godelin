@@ -12,8 +12,11 @@ val debugSigningJson = rootProject.file("app/src/debug/secrets.json")
     ?: throw GradleException("Missing or invalid app/src/debug/secrets.json")
 val configuredKeystorePath = debugSigningJson["keystore_path"] as? String
     ?: throw GradleException("Missing keystore_path in debug secrets")
-val debugKeystorePath = configuredKeystorePath
-    .replaceFirst("^~", System.getProperty("user.home"))
+val debugKeystorePath = if (configuredKeystorePath.startsWith("~/")) {
+    "${System.getProperty("user.home")}/${configuredKeystorePath.removePrefix("~/")}"
+} else {
+    configuredKeystorePath
+}
 val debugKeystoreFile = file(debugKeystorePath)
 val debugStorePassword = debugSigningJson["store_password"] as? String
     ?: throw GradleException("Missing store_password in debug secrets")
@@ -21,10 +24,6 @@ val debugKeyAlias = debugSigningJson["key_alias"] as? String
     ?: throw GradleException("Missing key_alias in debug secrets")
 val debugKeyPassword = debugSigningJson["key_password"] as? String
     ?: throw GradleException("Missing key_password in debug secrets")
-if (!debugKeystoreFile.isFile) {
-    throw GradleException("Development keystore not found at $debugKeystoreFile")
-}
-
 val releaseStoreFile = System.getenv("GODELIN_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("GODELIN_RELEASE_STORE_PASSWORD")
 val releaseKeyAlias = System.getenv("GODELIN_RELEASE_KEY_ALIAS")
