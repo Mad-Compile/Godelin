@@ -30,27 +30,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import java.net.URLEncoder
 import java.util.UUID
 
-private const val HOME_URL = "https://www.google.com"
-private val ink = Color(0xFF08090B)
-private val obsidianPanel = Color(0xFF14161A)
-private val obsidianRaised = Color(0xFF1B1E23)
-private val edge = Color(0xFF30343B)
-private val white = Color(0xFFF4F7FC)
-private val muted = Color(0xFF9BA8BA)
-private val accent = Color(0xFFD9DDE3)
+private val canvas = Color(0xFF101113)
+private val surface = Color(0xFF181A1D)
+private val raised = Color(0xFF202226)
+private val line = Color(0xFF2B2E33)
+private val foreground = Color(0xFFF1F1EF)
+private val secondary = Color(0xFF96999F)
+private val accent = Color(0xFFE5E7EB)
+private val accentInk = Color(0xFF17191C)
 
 private data class BrowserTab(
     val id: String = UUID.randomUUID().toString(),
@@ -159,209 +159,301 @@ fun BrowserScreen() {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF101114), ink, Color(0xFF10131D))))) {
-        Box(Modifier.align(Alignment.TopEnd).size(260.dp).background(Brush.radialGradient(listOf(Color(0xFF202329), Color.Transparent)), CircleShape))
-        Column(
-            Modifier.fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
+    Column(
+        Modifier.fillMaxSize().background(canvas)
+            .statusBarsPadding().navigationBarsPadding()
+    ) {
+        // Compact browser chrome
+        Row(
+            Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 14.dp)
-                    .height(58.dp).shadow(12.dp, RoundedCornerShape(16.dp))
-                    .background(obsidianRaised, RoundedCornerShape(16.dp))
-                    .border(1.dp, edge, RoundedCornerShape(16.dp))
-                    .padding(start = 16.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = accent, modifier = Modifier.size(22.dp))
-                Spacer(Modifier.width(12.dp))
-                BasicTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    textStyle = TextStyle(color = white, fontSize = 15.sp),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                    keyboardActions = KeyboardActions(onGo = { navigate(address) }),
-                    decorationBox = { inner -> Box {
-                        if (address.isEmpty()) Text("Search Godelin or enter URL", color = muted, fontSize = 14.sp)
-                        inner()
-                    } }
-                )
-                if (address.isNotEmpty()) {
-                    IconButton(onClick = { address = "" }, modifier = Modifier.size(34.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear address", tint = muted, modifier = Modifier.size(18.dp))
-                    }
-                }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 Box(
-                    Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                        .clickable { showMenu = true },
+                    Modifier.size(28.dp).clip(RoundedCornerShape(9.dp)).background(accent),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Tune, contentDescription = "Browser options", tint = accent, modifier = Modifier.size(21.dp))
+                    Text("g", color = accentInk, fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
-            }
-
-            AnimatedVisibility(visible = isLoading, enter = fadeIn(), exit = fadeOut()) {
-                LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().padding(top = 7.dp).height(2.dp), color = accent, trackColor = Color.Transparent)
-            }
-
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                if (currentUrl.isBlank()) {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            Modifier.size(104.dp)
-                                .shadow(26.dp, RoundedCornerShape(32.dp))
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(Color(0xFFF4F5F7), Color(0xFFBFC4CC))
-                                    ),
-                                    RoundedCornerShape(32.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "G",
-                                color = Color(0xFF111317),
-                                fontSize = 72.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-                    }
-                }
-
-                tabs.filter { it.url.isNotBlank() }.forEach { tab ->
-                    BrowserWebView(
-                        initialUrl = tab.url,
-                        isActive = tab.id == activeTabId,
-                        onCreated = { view -> webViews[tab.id] = view },
-                        onPageStarted = { url ->
-                            updateTab(tab.id) { it.copy(url = url) }
-                            if (tab.id == activeTabId) { address = url; isLoading = true; progress = 0f }
-                        },
-                        onPageFinished = { url ->
-                            updateTab(tab.id) { it.copy(url = url) }
-                            if (tab.id == activeTabId) { address = url; isLoading = false; progress = 1f }
-                        },
-                        onTitle = { title -> if (title.isNotBlank()) updateTab(tab.id) { it.copy(title = title) } },
-                        onProgress = { value ->
-                            if (tab.id == activeTabId) { progress = value / 100f; isLoading = value < 100 }
-                        }
+                Spacer(Modifier.width(9.dp))
+                Text("godelin", color = foreground, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.35).sp)
+                if (isLoading) {
+                    Spacer(Modifier.width(9.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(12.dp),
+                        color = secondary,
+                        strokeWidth = 1.5.dp
                     )
                 }
             }
-
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp).shadow(20.dp, RoundedCornerShape(25.dp))
-                    .background(obsidianRaised, RoundedCornerShape(25.dp)).border(1.dp, edge, RoundedCornerShape(25.dp))
-                    .padding(horizontal = 7.dp, vertical = 5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+            HeaderAction(Icons.Default.Add, "New tab", ::addTab)
+            Spacer(Modifier.width(5.dp))
+            Box(
+                Modifier.height(34.dp).clip(RoundedCornerShape(10.dp))
+                    .background(surface).border(1.dp, line, RoundedCornerShape(10.dp))
+                    .clickable { showTabs = true }.padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
             ) {
-                DockButton(Icons.Default.Home, "Home", true) {
-                    updateTab(activeTabId) { it.copy(url = "", title = "New tab") }
-                    address = ""; progress = 0f; isLoading = false
-                }
-                DockButton(Icons.Default.ArrowBack, "Back", activeWebView?.canGoBack() == true) { activeWebView?.goBack() }
-                DockButton(Icons.Default.ArrowForward, "Forward", activeWebView?.canGoForward() == true) { activeWebView?.goForward() }
-                DockButton(Icons.Default.Refresh, "Reload", currentUrl.isNotBlank()) { activeWebView?.reload() }
-                Box(
-                    Modifier.clip(RoundedCornerShape(15.dp)).background(Color(0xFF202329)).border(1.dp, Color(0xFF424750), RoundedCornerShape(15.dp))
-                        .clickable { showTabs = true }.padding(horizontal = 13.dp, vertical = 9.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Tab, contentDescription = "Tabs", tint = accent, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(5.dp))
-                        Text(tabs.size.toString(), color = white, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Tab, contentDescription = "Open tabs", tint = secondary, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(tabs.size.toString(), color = foreground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 }
             }
+            Spacer(Modifier.width(5.dp))
+            HeaderAction(Icons.Default.MoreHoriz, "More options") { showMenu = true }
+        }
+
+        // Address field is the primary control, with restrained focus treatment.
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp)
+                .height(48.dp).clip(RoundedCornerShape(14.dp))
+                .background(surface).border(1.dp, line, RoundedCornerShape(14.dp))
+                .padding(start = 13.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                if (currentUrl.startsWith("https://")) Icons.Default.Lock else Icons.Default.Search,
+                contentDescription = if (currentUrl.startsWith("https://")) "Secure connection" else "Search",
+                tint = secondary, modifier = Modifier.size(17.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            BasicTextField(
+                value = address,
+                onValueChange = { address = it },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                cursorBrush = SolidColor(accent),
+                textStyle = TextStyle(color = foreground, fontSize = 14.sp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                keyboardActions = KeyboardActions(onGo = { navigate(address) }),
+                decorationBox = { inner ->
+                    Box {
+                        if (address.isEmpty()) {
+                            Text("Search or enter address", color = secondary, fontSize = 14.sp)
+                        }
+                        inner()
+                    }
+                }
+            )
+            if (address.isNotEmpty()) {
+                IconButton(onClick = { address = "" }, modifier = Modifier.size(34.dp)) {
+                    Icon(Icons.Default.Close, contentDescription = "Clear address", tint = secondary, modifier = Modifier.size(17.dp))
+                }
+            } else {
+                Icon(Icons.Default.MicNone, contentDescription = "Voice search", tint = secondary, modifier = Modifier.padding(horizontal = 8.dp).size(18.dp))
+            }
+        }
+
+        AnimatedVisibility(visible = isLoading, enter = fadeIn(), exit = fadeOut()) {
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier.fillMaxWidth().height(2.dp),
+                color = accent,
+                trackColor = Color.Transparent
+            )
+        }
+
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (currentUrl.isBlank()) {
+                StartPage(onNavigate = { navigate(it) })
+            }
+
+            tabs.filter { it.url.isNotBlank() }.forEach { tab ->
+                BrowserWebView(
+                    initialUrl = tab.url,
+                    isActive = tab.id == activeTabId,
+                    onCreated = { view -> webViews[tab.id] = view },
+                    onPageStarted = { url ->
+                        updateTab(tab.id) { it.copy(url = url) }
+                        if (tab.id == activeTabId) { address = url; isLoading = true; progress = 0f }
+                    },
+                    onPageFinished = { url ->
+                        updateTab(tab.id) { it.copy(url = url) }
+                        if (tab.id == activeTabId) { address = url; isLoading = false; progress = 1f }
+                    },
+                    onTitle = { title ->
+                        if (title.isNotBlank()) updateTab(tab.id) { it.copy(title = title) }
+                    },
+                    onProgress = { value ->
+                        if (tab.id == activeTabId) { progress = value / 100f; isLoading = value < 100 }
+                    }
+                )
+            }
+        }
+
+        // Navigation controls sit on a quiet, full-width footer rather than a floating capsule.
+        HorizontalDivider(color = line, thickness = 1.dp)
+        Row(
+            Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FooterAction(Icons.Default.ArrowBack, "Back", activeWebView?.canGoBack() == true) { activeWebView?.goBack() }
+            FooterAction(Icons.Default.ArrowForward, "Forward", activeWebView?.canGoForward() == true) { activeWebView?.goForward() }
+            FooterAction(
+                if (isLoading) Icons.Default.Close else Icons.Default.Refresh,
+                if (isLoading) "Stop" else "Reload",
+                currentUrl.isNotBlank()
+            ) {
+                if (isLoading) activeWebView?.stopLoading() else activeWebView?.reload()
+            }
+            FooterAction(Icons.Default.Home, "Home", true) {
+                updateTab(activeTabId) { it.copy(url = "", title = "New tab") }
+                address = ""
+                progress = 0f
+                isLoading = false
+                activeWebView?.loadUrl("about:blank")
+            }
+            FooterAction(Icons.Default.BookmarkBorder, "Save", currentUrl.isNotBlank()) { showMenu = true }
         }
     }
 
     if (showMenu) {
-        ModalBottomSheet(onDismissRequest = { showMenu = false }, containerColor = Color(0xFF15171B), contentColor = white, dragHandle = { BottomSheetDefaults.DragHandle(color = muted) }) {
-            Text("Browser tools", Modifier.padding(horizontal = 22.dp), color = white, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+        ModalBottomSheet(
+            onDismissRequest = { showMenu = false },
+            containerColor = surface,
+            contentColor = foreground,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = secondary) }
+        ) {
+            Text("Browser", Modifier.padding(horizontal = 22.dp, vertical = 4.dp), color = foreground, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(12.dp))
-            SheetAction(Icons.Default.Add, "New tab", "Open a fresh browsing space") { showMenu = false; addTab() }
-            SheetAction(Icons.Default.Tab, "Tab overview", "Switch between open pages") { showMenu = false; showTabs = true }
+            SheetAction(Icons.Default.Add, "New tab", "Start a separate browsing session") { showMenu = false; addTab() }
+            SheetAction(Icons.Default.Tab, "All tabs", "Switch between open pages") { showMenu = false; showTabs = true }
             SheetAction(Icons.Default.Refresh, "Reload page", "Refresh the current website") { showMenu = false; activeWebView?.reload() }
-            SheetAction(Icons.Default.Settings, "Settings", "Browser preferences are coming next") { showMenu = false }
-            Spacer(Modifier.height(24.dp))
+            SheetAction(Icons.Default.Settings, "Settings", "Personalise your browser") { showMenu = false }
+            Spacer(Modifier.height(22.dp))
         }
     }
 
     if (showTabs) {
-        ModalBottomSheet(onDismissRequest = { showTabs = false }, containerColor = Color(0xFF15171B), contentColor = white, dragHandle = { BottomSheetDefaults.DragHandle(color = muted) }) {
+        ModalBottomSheet(
+            onDismissRequest = { showTabs = false },
+            containerColor = surface,
+            contentColor = foreground,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = secondary) }
+        ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Your tabs", color = white, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
-                    Text("${tabs.size} open ${if (tabs.size == 1) "tab" else "tabs"}", color = muted, fontSize = 11.sp)
+                    Text("Tabs", color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                    Text("${tabs.size} open", color = secondary, fontSize = 12.sp)
                 }
-                IconButton(onClick = { addTab() }) { Icon(Icons.Default.Add, contentDescription = "New tab", tint = white) }
+                FilledTonalButton(onClick = { addTab() }, colors = ButtonDefaults.filledTonalButtonColors(containerColor = raised, contentColor = foreground)) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(17.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("New tab")
+                }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
             tabs.toList().forEach { tab ->
                 val selected = tab.id == activeTabId
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(16.dp))
-                        .background(if (selected) obsidianRaised else obsidianPanel)
-                        .border(1.dp, if (selected) Color(0xFF626873) else edge, RoundedCornerShape(16.dp))
-                        .clickable { selectTab(tab.id) }.padding(start = 14.dp, end = 5.dp, top = 12.dp, bottom = 12.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(if (selected) raised else Color.Transparent)
+                        .border(1.dp, if (selected) Color(0xFF454950) else line, RoundedCornerShape(13.dp))
+                        .clickable { selectTab(tab.id) }
+                        .padding(start = 13.dp, end = 5.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Language, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(tab.title, color = white, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                        Text(tab.url.ifBlank { "Start page" }, color = muted, fontSize = 10.sp, maxLines = 1)
+                    Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(surface), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Language, contentDescription = null, tint = secondary, modifier = Modifier.size(18.dp))
                     }
-                    IconButton(onClick = { closeTab(tab.id) }) { Icon(Icons.Default.Close, contentDescription = "Close tab", tint = muted, modifier = Modifier.size(18.dp)) }
+                    Spacer(Modifier.width(11.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(tab.title, color = foreground, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                        Text(tab.url.ifBlank { "New tab" }, color = secondary, fontSize = 11.sp, maxLines = 1)
+                    }
+                    IconButton(onClick = { closeTab(tab.id) }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close tab", tint = secondary, modifier = Modifier.size(17.dp))
+                    }
                 }
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(20.dp))
         }
     }
 }
 
 @Composable
-private fun QuickLink(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(17.dp)).background(obsidianPanel).border(1.dp, edge, RoundedCornerShape(17.dp)).clickable(onClick = onClick).padding(horizontal = 15.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))
-        Spacer(Modifier.height(6.dp))
-        Text(label, color = white, fontSize = 10.sp)
+private fun StartPage(onNavigate: (String) -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            Modifier.size(62.dp).clip(RoundedCornerShape(20.dp)).background(accent),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("g", color = accentInk, fontSize = 43.sp, fontWeight = FontWeight.Black, letterSpacing = (-3).sp)
+        }
+        Spacer(Modifier.height(20.dp))
+        Text("A little more room to think.", color = foreground, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.7).sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(7.dp))
+        Text("The web, without the noise.", color = secondary, fontSize = 14.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(30.dp))
+        Text("QUICK ACCESS", color = secondary, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.4.sp)
+        Spacer(Modifier.height(13.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StartShortcut("Google", Icons.Default.Search) { onNavigate("google.com") }
+            StartShortcut("YouTube", Icons.Default.PlayCircleOutline) { onNavigate("youtube.com") }
+            StartShortcut("Wikipedia", Icons.Default.MenuBook) { onNavigate("wikipedia.org") }
+        }
+        Spacer(Modifier.height(44.dp))
+        Text("GODELIN  ·  BROWSE AT YOUR PACE", color = Color(0xFF62666D), fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.1.sp)
     }
 }
 
 @Composable
-private fun ObsidianCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier.shadow(12.dp, RoundedCornerShape(20.dp)).background(obsidianPanel, RoundedCornerShape(20.dp)).border(1.dp, edge, RoundedCornerShape(20.dp))) { content() }
+private fun StartShortcut(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Column(
+        Modifier.width(88.dp).clip(RoundedCornerShape(14.dp))
+            .background(surface).border(1.dp, line, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick).padding(vertical = 15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.height(8.dp))
+        Text(label, color = foreground, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    }
 }
 
 @Composable
-private fun DockButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(15.dp)).clickable(enabled = enabled, onClick = onClick).padding(horizontal = 9.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, contentDescription = label, tint = if (enabled) white else Color(0xFF626873), modifier = Modifier.size(19.dp))
-        Spacer(Modifier.height(2.dp))
-        Text(label, color = if (enabled) muted else Color(0xFF626873), fontSize = 9.sp)
+private fun HeaderAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = label, tint = secondary, modifier = Modifier.size(19.dp))
+    }
+}
+
+@Composable
+private fun FooterAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
+    Column(
+        Modifier.widthIn(min = 48.dp).clip(RoundedCornerShape(10.dp))
+            .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 7.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(icon, contentDescription = label, tint = if (enabled) foreground else Color(0xFF55595F), modifier = Modifier.size(19.dp))
+        Spacer(Modifier.height(3.dp))
+        Text(label, color = if (enabled) secondary else Color(0xFF55595F), fontSize = 9.sp)
     }
 }
 
 @Composable
 private fun SheetAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 22.dp, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(38.dp).background(obsidianPanel, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 22.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(raised), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(13.dp))
         Column {
-            Text(title, color = white, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Text(subtitle, color = muted, fontSize = 11.sp)
+            Text(title, color = foreground, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(subtitle, color = secondary, fontSize = 11.sp)
         }
     }
 }
@@ -400,7 +492,7 @@ private fun BrowserWebView(
                     override fun onProgressChanged(view: WebView, newProgress: Int) { onProgress(newProgress) }
                     override fun onReceivedTitle(view: WebView, title: String?) { if (!title.isNullOrBlank()) onTitle(title) }
                 }
-                setBackgroundColor(android.graphics.Color.rgb(8, 10, 16))
+                setBackgroundColor(android.graphics.Color.rgb(16, 17, 19))
                 visibility = if (isActive) View.VISIBLE else View.GONE
                 onCreated(this)
                 loadUrl(initialUrl)
