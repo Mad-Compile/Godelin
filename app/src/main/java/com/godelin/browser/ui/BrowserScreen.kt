@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.util.UUID
 
@@ -74,6 +76,26 @@ fun BrowserScreen() {
     var showAboutDialog by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
+    val updatePreferences = remember(context) {
+        context.getSharedPreferences("godelin_updates", android.content.Context.MODE_PRIVATE)
+    }
+    var updateAvailable by remember {
+        mutableStateOf(updatePreferences.getBoolean("update_available", false))
+    }
+    LaunchedEffect(Unit) {
+        val now = System.currentTimeMillis()
+        val lastCheck = updatePreferences.getLong("last_check_ms", 0L)
+        if (now - lastCheck >= 24L * 60L * 60L * 1000L) {
+            val result = withContext(Dispatchers.IO) { checkForGodelinUpdate(context) }
+            if (result != null) {
+                updatePreferences.edit()
+                    .putLong("last_check_ms", now)
+                    .putBoolean("update_available", result)
+                    .apply()
+                updateAvailable = result
+            }
+        }
+    }
     val activeTab = tabs.firstOrNull { it.id == activeTabId } ?: tabs.first()
     val activeWebView = webViews[activeTabId]
     val currentUrl = activeTab.url
@@ -205,7 +227,7 @@ fun BrowserScreen() {
                 }
             }
             Spacer(Modifier.width(5.dp))
-            HeaderAction(Icons.Default.MoreHoriz, "More options") { showMenu = true }
+            HeaderAction(Icons.Default.MoreHoriz, "More options", onClick = { showMenu = true }, showDot = updateAvailable)
         }
 
         // Address field is the primary control, with restrained focus treatment.
@@ -332,7 +354,16 @@ fun BrowserScreen() {
     }
 
     if (showUpdateSheet) {
-        UpdateSheet(onDismiss = { showUpdateSheet = false })
+        UpdateSheet(
+            onDismiss = { showUpdateSheet = false },
+            onAvailabilityChanged = { available ->
+                updateAvailable = available
+                updatePreferences.edit()
+                    .putLong("last_check_ms", System.currentTimeMillis())
+                    .putBoolean("update_available", available)
+                    .apply()
+            }
+        )
     }
 
     if (showAboutDialog) {
@@ -420,12 +451,23 @@ private fun StartPage(onNavigate: (String) -> Unit) {
 }
 
 @Composable
-private fun HeaderAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+private fun HeaderAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    showDot: Boolean = false
+) {
     Box(
         Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = label, tint = secondary, modifier = Modifier.size(19.dp))
+        if (showDot) {
+            Box(
+                Modifier.align(Alignment.TopEnd).padding(top = 5.dp, end = 5.dp)
+                    .size(7.dp).clip(CircleShape).background(accent)
+            )
+        }
     }
 }
 
