@@ -2,7 +2,6 @@ package com.godelin.browser.ui
 
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +35,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -69,7 +67,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -109,7 +106,6 @@ private data class WeatherSnapshot(
     val rainChance: Int?
 )
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
