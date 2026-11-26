@@ -279,7 +279,7 @@ private fun findLatestRelease(context: Context): UpdateState {
 }
 
 private fun downloadAndVerify(context: Context, release: GodelinRelease): File {
-    val checksumText = requestText(release.checksumUrl)
+    val checksumText = requestText(release.checksumUrl) ?: error("The release checksum file could not be downloaded.")
     val expectedHash = Regex("(?i)^([a-f0-9]{64})").find(checksumText.trim())?.groupValues?.get(1)
         ?: error("The release checksum file is invalid.")
 
