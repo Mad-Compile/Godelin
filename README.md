@@ -1,6 +1,6 @@
 # Godelin Browser
 
-Godelin is an Android browser project by Mad-Compile.
+Godelin is an Android browser developed and published by Mad Compile™, based in India.
 
 ## Current foundation
 
@@ -35,7 +35,7 @@ Godelin is proprietary software. See [LICENSE](LICENSE) for the project terms. T
 
 ## Signed releases and in-app updates
 
-Stable releases are published as signed APKs on [GitHub Releases](https://github.com/Mad-Compile/Godelin/releases). The Android app checks that public release feed when **More options → Check for updates** is opened. A user chooses when to download and install; Android's package installer always presents the final installation confirmation.
+Stable releases are published as signed APKs on [GitHub Releases](https://github.com/Mad-Compile/Godelin/releases). Godelin checks for updates at most once per day when opened, marks the menu when a stable update is available, and also supports **More options → Check for updates** for a manual check. Downloads begin only after the user chooses them. Before handing the APK to Android, Godelin verifies its SHA-256 checksum, package identity, increasing version code, and signing certificate against the installed app. Android's package installer always presents the final installation confirmation.
 
 ### One-time signing-key setup (required before the first stable release)
 
