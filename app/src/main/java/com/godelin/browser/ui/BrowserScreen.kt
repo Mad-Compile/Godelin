@@ -26,6 +26,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -364,49 +369,154 @@ fun BrowserScreen() {
     }
 
     if (showTabs) {
-        ModalBottomSheet(
+        Dialog(
             onDismissRequest = { showTabs = false },
-            containerColor = surface,
-            contentColor = foreground,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = secondary) }
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Tabs", color = foreground, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                    Text("${tabs.size} open", color = secondary, fontSize = 12.sp)
-                }
-                FilledTonalButton(onClick = { addTab() }, colors = ButtonDefaults.filledTonalButtonColors(containerColor = raised, contentColor = foreground)) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(17.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("New tab")
+            TabsOverview(
+                tabs = tabs.toList(),
+                activeTabId = activeTabId,
+                onSelect = { selectTab(it) },
+                onClose = { closeTab(it) },
+                onNewTab = { addTab() },
+                onDismiss = { showTabs = false }
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun TabsOverview(
+    tabs: List<BrowserTab>,
+    activeTabId: String,
+    onSelect: (String) -> Unit,
+    onClose: (String) -> Unit,
+    onNewTab: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    val filteredTabs = tabs.filter {
+        query.isBlank() || it.title.contains(query, true) || it.url.contains(query, true)
+    }
+
+    Column(
+        Modifier.fillMaxSize().background(Color(0xFF0D1110))
+            .statusBarsPadding().navigationBarsPadding().padding(horizontal = 16.dp)
+    ) {
+        Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = Color(0xFF202725), shape = RoundedCornerShape(22.dp)) {
+                Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(color = Color(0xFF35413D), shape = RoundedCornerShape(16.dp)) {
+                        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Tab, contentDescription = null, tint = Color(0xFFBDEFE4), modifier = Modifier.size(19.dp))
+                            Spacer(Modifier.width(7.dp))
+                            Text(tabs.size.toString(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Icon(Icons.Default.GridView, contentDescription = "Grid view", tint = Color(0xFFE6ECE9), modifier = Modifier.padding(horizontal = 13.dp).size(22.dp))
                 }
             }
-            Spacer(Modifier.height(14.dp))
-            tabs.toList().forEach { tab ->
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "Close tab overview", tint = Color(0xFFB8C2BE))
+            }
+        }
+
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 14.dp),
+            placeholder = { Text("Search your tabs", color = Color(0xFFB4BFBA)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFB4BFBA)) },
+            singleLine = true,
+            shape = RoundedCornerShape(28.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFF303735),
+                unfocusedContainerColor = Color(0xFF303735),
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color(0xFF8ADBCB)
+            )
+        )
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(bottom = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            items(filteredTabs, key = { it.id }) { tab ->
                 val selected = tab.id == activeTabId
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(13.dp))
-                        .background(if (selected) raised else Color.Transparent)
-                        .border(1.dp, if (selected) Color(0xFF454950) else line, RoundedCornerShape(13.dp))
-                        .clickable { selectTab(tab.id) }
-                        .padding(start = 13.dp, end = 5.dp, top = 12.dp, bottom = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(25.dp))
+                        .background(if (selected) Color(0xFF83D8C9) else Color(0xFF303735))
+                        .border(
+                            width = if (selected) 2.dp else 1.dp,
+                            color = if (selected) Color(0xFF83D8C9) else Color(0xFF414946),
+                            shape = RoundedCornerShape(25.dp)
+                        )
+                        .clickable { onSelect(tab.id) }
+                        .padding(6.dp)
                 ) {
-                    Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(surface), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Language, contentDescription = null, tint = secondary, modifier = Modifier.size(18.dp))
+                    Row(Modifier.fillMaxWidth().height(42.dp).padding(horizontal = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Shield, contentDescription = null, tint = if (selected) Color(0xFF173C36) else Color(0xFFE5EFEB), modifier = Modifier.size(21.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            tab.title.ifBlank { "New tab" },
+                            modifier = Modifier.weight(1f),
+                            color = if (selected) Color(0xFF173C36) else Color(0xFFF0F4F2),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                        IconButton(onClick = { onClose(tab.id) }, modifier = Modifier.size(30.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "Close tab", tint = if (selected) Color(0xFF24564D) else Color(0xFFCFD8D4), modifier = Modifier.size(18.dp))
+                        }
                     }
-                    Spacer(Modifier.width(11.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(tab.title, color = foreground, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                        Text(tab.url.ifBlank { "New tab" }, color = secondary, fontSize = 11.sp, maxLines = 1)
-                    }
-                    IconButton(onClick = { closeTab(tab.id) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close tab", tint = secondary, modifier = Modifier.size(17.dp))
+                    Box(
+                        Modifier.fillMaxWidth().aspectRatio(0.82f).clip(RoundedCornerShape(18.dp))
+                            .background(if (tab.url.isBlank()) Color(0xFF090D0C) else Color(0xFF1B2421)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (tab.url.isBlank()) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFF202B27)), contentAlignment = Alignment.Center) {
+                                    Text("G", color = Color(0xFFBDEFE4), fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.height(9.dp))
+                                Text("Godelin", color = Color(0xFF9BA9A3), fontSize = 11.sp)
+                            }
+                        } else {
+                            Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Language, contentDescription = null, tint = Color(0xFFBDEFE4), modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        runCatching { java.net.URI(tab.url).host ?: tab.url }.getOrDefault(tab.url),
+                                        color = Color(0xFFDCE5E1), fontSize = 10.sp, maxLines = 1
+                                    )
+                                }
+                                Text(tab.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 3)
+                            }
+                        }
                     }
                 }
             }
-            Spacer(Modifier.height(20.dp))
+        }
+
+        Row(Modifier.fillMaxWidth().height(70.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            FilledIconButton(
+                onClick = onNewTab,
+                modifier = Modifier.size(58.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFF83D8C9), contentColor = Color(0xFF123A34))
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "New tab", modifier = Modifier.size(30.dp))
+            }
         }
     }
 }
