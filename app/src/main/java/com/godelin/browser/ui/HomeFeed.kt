@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Grain
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Thunderstorm
@@ -35,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -106,6 +109,8 @@ private data class WeatherSnapshot(
     val rainChance: Int?
 )
 
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
     val context = LocalContext.current
@@ -332,8 +337,8 @@ fun GodelinHomeFeed(onNavigate: (String) -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ShortcutChip("Google", Icons.Default.Search, Modifier.weight(1f)) { onNavigate("google.com") }
-            ShortcutChip("YouTube", Icons.Default.ArrowOutward, Modifier.weight(1f)) { onNavigate("youtube.com") }
-            ShortcutChip("Wikipedia", Icons.Default.ArrowOutward, Modifier.weight(1f)) { onNavigate("wikipedia.org") }
+            ShortcutChip("YouTube", Icons.Default.PlayCircleOutline, Modifier.weight(1f)) { onNavigate("youtube.com") }
+            ShortcutChip("Wikipedia", Icons.Default.MenuBook, Modifier.weight(1f)) { onNavigate("wikipedia.org") }
         }
     }
 
