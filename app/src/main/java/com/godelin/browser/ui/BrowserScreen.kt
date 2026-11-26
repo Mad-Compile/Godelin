@@ -243,7 +243,7 @@ fun BrowserScreen() {
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (currentUrl.isBlank()) {
-                GodelinHomeFeed(
+                GodelinLaunchPage(
                     onNavigate = { navigate(it) },
                     onAddShortcut = { addTab() },
                     onSearch = {
