@@ -189,86 +189,39 @@ fun BrowserScreen() {
         Modifier.fillMaxSize().background(canvas)
             .statusBarsPadding().navigationBarsPadding()
     ) {
-        // Compact browser chrome
+        // Single premium address bar, sized to remain comfortable on compact phones.
         Row(
-            Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 18.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
+                .height(58.dp).clip(RoundedCornerShape(30.dp))
+                .background(Color(0xFF111116))
+                .border(1.dp, Color(0xFF302B3A), RoundedCornerShape(30.dp))
+                .padding(start = 16.dp, end = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Box(
-                    Modifier.size(28.dp).clip(RoundedCornerShape(9.dp)).background(accent),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("g", color = accentInk, fontSize = 20.sp, fontWeight = FontWeight.Black)
-                }
-                Spacer(Modifier.width(9.dp))
-                Text("godelin", color = foreground, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.35).sp)
-                if (isLoading) {
-                    Spacer(Modifier.width(9.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(12.dp),
-                        color = secondary,
-                        strokeWidth = 1.5.dp
-                    )
-                }
-            }
-            HeaderAction(Icons.Default.Add, "New tab", ::addTab)
-            Spacer(Modifier.width(5.dp))
-            Box(
-                Modifier.height(34.dp).clip(RoundedCornerShape(10.dp))
-                    .background(surface).border(1.dp, line, RoundedCornerShape(10.dp))
-                    .clickable { showTabs = true }.padding(horizontal = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Tab, contentDescription = "Open tabs", tint = secondary, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(tabs.size.toString(), color = foreground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                }
-            }
-            Spacer(Modifier.width(5.dp))
-            HeaderAction(Icons.Default.MoreHoriz, "More options", onClick = { showMenu = true }, showDot = updateAvailable)
-        }
-
-        // Address field is the primary control, with restrained focus treatment.
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp)
-                .height(48.dp).clip(RoundedCornerShape(14.dp))
-                .background(surface).border(1.dp, line, RoundedCornerShape(14.dp))
-                .padding(start = 13.dp, end = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                if (currentUrl.startsWith("https://")) Icons.Default.Lock else Icons.Default.Search,
-                contentDescription = if (currentUrl.startsWith("https://")) "Secure connection" else "Search",
-                tint = secondary, modifier = Modifier.size(17.dp)
-            )
-            Spacer(Modifier.width(10.dp))
+            Icon(Icons.Default.Search, contentDescription = "Search", tint = secondary, modifier = Modifier.size(23.dp))
+            Spacer(Modifier.width(14.dp))
             BasicTextField(
                 value = address,
                 onValueChange = { address = it },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
-                cursorBrush = SolidColor(accent),
-                textStyle = TextStyle(color = foreground, fontSize = 14.sp),
+                cursorBrush = SolidColor(Color(0xFFB77BFF)),
+                textStyle = TextStyle(color = foreground, fontSize = 15.sp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { navigate(address) }),
                 decorationBox = { inner ->
                     Box {
-                        if (address.isEmpty()) {
-                            Text("Search or enter address", color = secondary, fontSize = 14.sp)
-                        }
+                        if (address.isEmpty()) Text("Search or enter address", color = secondary, fontSize = 15.sp)
                         inner()
                     }
                 }
             )
-            if (address.isNotEmpty()) {
-                IconButton(onClick = { address = "" }, modifier = Modifier.size(34.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear address", tint = secondary, modifier = Modifier.size(17.dp))
-                }
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(19.dp), color = Color(0xFFB77BFF), strokeWidth = 1.8.dp)
             } else {
-                Icon(Icons.Default.MicNone, contentDescription = "Voice search", tint = secondary, modifier = Modifier.padding(horizontal = 8.dp).size(18.dp))
+                HeaderAction(Icons.Default.Shield, "Privacy and security", onClick = { showMenu = true })
             }
+            HeaderAction(Icons.Default.MoreVert, "More options", onClick = { showMenu = true }, showDot = updateAvailable)
         }
 
         AnimatedVisibility(visible = isLoading, enter = fadeIn(), exit = fadeOut()) {
@@ -282,7 +235,7 @@ fun BrowserScreen() {
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (currentUrl.isBlank()) {
-                StartPage(onNavigate = { navigate(it) })
+                GodelinLaunchPage(onNavigate = { navigate(it) }, onAddShortcut = { showMenu = true })
             }
 
             tabs.filter { it.url.isNotBlank() }.forEach { tab ->
@@ -308,22 +261,16 @@ fun BrowserScreen() {
             }
         }
 
-        // Navigation controls sit on a quiet, full-width footer rather than a floating capsule.
-        HorizontalDivider(color = line, thickness = 1.dp)
+        // Floating navigation dock inspired by the approved Godelin concept.
         Row(
-            Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                .height(76.dp).clip(RoundedCornerShape(40.dp))
+                .background(Color(0xF014121A))
+                .border(1.dp, Color(0xFF393342), RoundedCornerShape(40.dp))
+                .padding(horizontal = 7.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FooterAction(Icons.Default.ArrowBack, "Back", activeWebView?.canGoBack() == true) { activeWebView?.goBack() }
-            FooterAction(Icons.Default.ArrowForward, "Forward", activeWebView?.canGoForward() == true) { activeWebView?.goForward() }
-            FooterAction(
-                if (isLoading) Icons.Default.Close else Icons.Default.Refresh,
-                if (isLoading) "Stop" else "Reload",
-                currentUrl.isNotBlank()
-            ) {
-                if (isLoading) activeWebView?.stopLoading() else activeWebView?.reload()
-            }
             FooterAction(Icons.Default.Home, "Home", true) {
                 updateTab(activeTabId) { it.copy(url = "", title = "New tab") }
                 address = ""
@@ -331,7 +278,10 @@ fun BrowserScreen() {
                 isLoading = false
                 activeWebView?.loadUrl("about:blank")
             }
-            FooterAction(Icons.Default.BookmarkBorder, "Save", currentUrl.isNotBlank()) { showMenu = true }
+            FooterAction(Icons.Default.ArrowBack, "Back", activeWebView?.canGoBack() == true) { activeWebView?.goBack() }
+            FooterAction(Icons.Default.ArrowForward, "Forward", activeWebView?.canGoForward() == true) { activeWebView?.goForward() }
+            FooterAction(Icons.Default.BookmarkBorder, "Bookmarks", true) { showMenu = true }
+            FooterAction(Icons.Default.Tab, "Tabs", true) { showTabs = true }
         }
     }
 
