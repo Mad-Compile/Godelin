@@ -8,4 +8,4 @@ private-signing/
 release-signing/
 
 # Local-only development configuration and credentials
-app/src/debug/assets/secrets.json
+app/src/debug/secrets.json
