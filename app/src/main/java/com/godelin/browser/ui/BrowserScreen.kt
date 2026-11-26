@@ -219,7 +219,7 @@ fun BrowserScreen() {
                 keyboardActions = KeyboardActions(onGo = { navigate(address) }),
                 decorationBox = { inner ->
                     Box {
-                        if (address.isEmpty()) Text("Search Godelin or type a web address", color = chromeMuted, fontSize = 15.sp)
+                        if (address.isEmpty()) Text("Search or type URL", color = chromeMuted, fontSize = 15.sp)
                         inner()
                     }
                 }
@@ -419,7 +419,7 @@ private fun HeaderAction(
     showDot: Boolean = false
 ) {
     Box(
-        Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick),
+        Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = label, tint = chromeMuted, modifier = Modifier.size(19.dp))
