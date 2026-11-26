@@ -412,11 +412,6 @@ fun BrowserScreen() {
 }
 
 @Composable
-private fun StartPage(onNavigate: (String) -> Unit) {
-    GodelinHomeFeed(onNavigate = onNavigate)
-}
-
-@Composable
 private fun HeaderAction(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
