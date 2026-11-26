@@ -30,6 +30,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -46,7 +48,12 @@ import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.util.UUID
 
-private val canvas = Color(0xFF101113)
+private val canvas = Color(0xFF050608)
+private val chromeBackground = Color(0xFFF2F9F7)
+private val chromeSurface = Color(0xFFD6EAE5)
+private val chromeLine = Color(0xFFC3D9D3)
+private val chromeForeground = Color(0xFF17201D)
+private val chromeMuted = Color(0xFF596661)
 private val surface = Color(0xFF181A1D)
 private val raised = Color(0xFF202226)
 private val line = Color(0xFF2B2E33)
@@ -75,6 +82,7 @@ fun BrowserScreen() {
     var showUpdateSheet by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
+    val addressFocusRequester = remember { FocusRequester() }
     val context = LocalContext.current
     val updatePreferences = remember(context) {
         context.getSharedPreferences("godelin_updates", android.content.Context.MODE_PRIVATE)
@@ -186,32 +194,32 @@ fun BrowserScreen() {
     }
 
     Column(
-        Modifier.fillMaxSize().background(canvas)
+        Modifier.fillMaxSize().background(chromeBackground)
             .statusBarsPadding().navigationBarsPadding()
     ) {
         // Single premium address bar, sized to remain comfortable on compact phones.
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
                 .height(58.dp).clip(RoundedCornerShape(30.dp))
-                .background(Color(0xFF111116))
-                .border(1.dp, Color(0xFF302B3A), RoundedCornerShape(30.dp))
+                .background(chromeSurface)
+                .border(1.dp, chromeLine, RoundedCornerShape(30.dp))
                 .padding(start = 16.dp, end = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Search, contentDescription = "Search", tint = secondary, modifier = Modifier.size(23.dp))
+            Icon(Icons.Default.Search, contentDescription = "Search", tint = chromeForeground, modifier = Modifier.size(23.dp))
             Spacer(Modifier.width(14.dp))
             BasicTextField(
                 value = address,
                 onValueChange = { address = it },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).focusRequester(addressFocusRequester),
                 singleLine = true,
-                cursorBrush = SolidColor(Color(0xFFB77BFF)),
-                textStyle = TextStyle(color = foreground, fontSize = 15.sp),
+                cursorBrush = SolidColor(Color(0xFF4D59D8)),
+                textStyle = TextStyle(color = chromeForeground, fontSize = 15.sp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { navigate(address) }),
                 decorationBox = { inner ->
                     Box {
-                        if (address.isEmpty()) Text("Search or enter address", color = secondary, fontSize = 15.sp)
+                        if (address.isEmpty()) Text("Search Godelin or type a web address", color = chromeMuted, fontSize = 15.sp)
                         inner()
                     }
                 }
@@ -219,7 +227,7 @@ fun BrowserScreen() {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(19.dp), color = Color(0xFFB77BFF), strokeWidth = 1.8.dp)
             } else {
-                HeaderAction(Icons.Default.Shield, "Privacy and security", onClick = { showMenu = true })
+                HeaderAction(Icons.Default.Add, "New tab", onClick = { addTab() })
             }
             HeaderAction(Icons.Default.MoreVert, "More options", onClick = { showMenu = true }, showDot = updateAvailable)
         }
@@ -235,7 +243,14 @@ fun BrowserScreen() {
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (currentUrl.isBlank()) {
-                GodelinLaunchPage(onNavigate = { navigate(it) }, onAddShortcut = { showMenu = true })
+                GodelinHomeFeed(
+                    onNavigate = { navigate(it) },
+                    onAddShortcut = { addTab() },
+                    onSearch = {
+                        addressFocusRequester.requestFocus()
+                        keyboard?.show()
+                    }
+                )
             }
 
             tabs.filter { it.url.isNotBlank() }.forEach { tab ->
@@ -261,13 +276,10 @@ fun BrowserScreen() {
             }
         }
 
-        // Floating navigation dock inspired by the approved Godelin concept.
+        // Clean mint navigation strip: the search action focuses the real address field.
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                .height(76.dp).clip(RoundedCornerShape(40.dp))
-                .background(Color(0xF014121A))
-                .border(1.dp, Color(0xFF393342), RoundedCornerShape(40.dp))
-                .padding(horizontal = 7.dp),
+            Modifier.fillMaxWidth().height(64.dp).background(chromeBackground)
+                .padding(horizontal = 14.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -279,9 +291,12 @@ fun BrowserScreen() {
                 activeWebView?.loadUrl("about:blank")
             }
             FooterAction(Icons.Default.ArrowBack, "Back", activeWebView?.canGoBack() == true) { activeWebView?.goBack() }
-            FooterAction(Icons.Default.ArrowForward, "Forward", activeWebView?.canGoForward() == true) { activeWebView?.goForward() }
-            FooterAction(Icons.Default.BookmarkBorder, "Bookmarks", true) { showMenu = true }
+            FooterAction(Icons.Default.Search, "Search", true) {
+                addressFocusRequester.requestFocus()
+                keyboard?.show()
+            }
             FooterAction(Icons.Default.Tab, "Tabs", true) { showTabs = true }
+            FooterAction(Icons.Default.MoreHoriz, "More", true) { showMenu = true }
         }
     }
 
@@ -296,6 +311,7 @@ fun BrowserScreen() {
             Spacer(Modifier.height(12.dp))
             SheetAction(Icons.Default.Add, "New tab", "Start a separate browsing session") { showMenu = false; addTab() }
             SheetAction(Icons.Default.Tab, "All tabs", "Switch between open pages") { showMenu = false; showTabs = true }
+            SheetAction(Icons.Default.ArrowForward, "Forward page", "Move to the next page in this tab") { showMenu = false; activeWebView?.goForward() }
             SheetAction(Icons.Default.Refresh, "Reload page", "Refresh the current website") { showMenu = false; activeWebView?.reload() }
             SheetAction(Icons.Default.SystemUpdateAlt, "Check for updates", "Find the latest signed Godelin release") { showMenu = false; showUpdateSheet = true }
             SheetAction(Icons.Default.Info, "About Godelin", "Publisher, version and ownership") { showMenu = false; showAboutDialog = true }
@@ -411,7 +427,7 @@ private fun HeaderAction(
         Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Icon(icon, contentDescription = label, tint = secondary, modifier = Modifier.size(19.dp))
+        Icon(icon, contentDescription = label, tint = chromeMuted, modifier = Modifier.size(19.dp))
         if (showDot) {
             Box(
                 Modifier.align(Alignment.TopEnd).padding(top = 5.dp, end = 5.dp)
@@ -423,14 +439,17 @@ private fun HeaderAction(
 
 @Composable
 private fun FooterAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
-    Column(
-        Modifier.widthIn(min = 48.dp).clip(RoundedCornerShape(10.dp))
-            .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 7.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        Modifier.size(48.dp).clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(icon, contentDescription = label, tint = if (enabled) foreground else Color(0xFF55595F), modifier = Modifier.size(19.dp))
-        Spacer(Modifier.height(3.dp))
-        Text(label, color = if (enabled) secondary else Color(0xFF55595F), fontSize = 9.sp)
+        Icon(
+            icon,
+            contentDescription = label,
+            tint = if (enabled) chromeForeground else Color(0xFF9DAAA6),
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 
