@@ -61,7 +61,7 @@ jobs:
           STORE_FILE="$RUNNER_TEMP/godelin-release.jks"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$STORE_FILE"
           chmod 600 "$STORE_FILE"
-          if ! keytool -list -keystore "$STORE_FILE" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null 2>&1; then
+          if ! keytool -list -keystore "$STORE_FILE" -storepass:env STORE_PASSWORD -alias "$KEY_ALIAS" >/dev/null 2>&1; then
             echo "::error::The release keystore, password, or alias is invalid."
             rm -f "$STORE_FILE"
             exit 1
@@ -77,6 +77,8 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))
+          export GODELIN_VERSION_NAME="$VERSION"
+          export GODELIN_VERSION_CODE="$VERSION_CODE"
           echo "GODELIN_VERSION_NAME=$VERSION" >> "$GITHUB_ENV"
           echo "GODELIN_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           gradle --no-daemon :app:assembleRelease
