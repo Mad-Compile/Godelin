@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   debug-apk:
@@ -57,16 +57,20 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/godelin-ci-validation.jks"
 
-      - name: Restore persistent development signing key
+      - name: Restore cached development signing key
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
           key: godelin-development-debug-keystore-v1
 
-      - name: Create development signing key on first run
+      - name: Restore or create repository-backed development signing key
         shell: bash
         run: |
-          mkdir -p "$HOME/.android"
+          set -euo pipefail
+          mkdir -p "$HOME/.android" cache
+          if [ ! -f "$HOME/.android/debug.keystore" ] && [ -f cache/godelin-debug.keystore.b64 ]; then
+            base64 --decode cache/godelin-debug.keystore.b64 > "$HOME/.android/debug.keystore"
+          fi
           if [ ! -f "$HOME/.android/debug.keystore" ]; then
             keytool -genkeypair -noprompt -v \
               -keystore "$HOME/.android/debug.keystore" \
@@ -78,6 +82,19 @@ jobs:
               -keysize 2048 \
               -validity 10000 \
               -dname "CN=Android Debug, O=Mad Compile, C=IN"
+          fi
+          chmod 600 "$HOME/.android/debug.keystore"
+
+          # Bootstrap the public development fallback once. This is intentionally
+          # a disposable dev key; production signing must use a different identity.
+          if [ ! -f cache/godelin-debug.keystore.b64 ] && [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
+            base64 -w 0 "$HOME/.android/debug.keystore" > cache/godelin-debug.keystore.b64
+            printf '\n' >> cache/godelin-debug.keystore.b64
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add cache/godelin-debug.keystore.b64
+            git commit -m "Store development signing fallback [skip ci]"
+            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
 
       - name: Build debug APK
