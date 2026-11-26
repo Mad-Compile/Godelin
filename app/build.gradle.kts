@@ -1,29 +1,8 @@
-import groovy.json.JsonSlurper
-import java.util.Base64
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
-
-val devSigningFile = rootProject.file("app/src/debug/secrets.json")
-if (!devSigningFile.isFile) {
-    throw GradleException("Missing shared Godelin development signing file: app/src/debug/secrets.json")
-}
-val devSigning = JsonSlurper().parse(devSigningFile) as? Map<*, *>
-    ?: throw GradleException("Invalid Godelin development signing JSON")
-val devKeystoreBase64 = devSigning["keystore_base64"] as? String
-    ?: throw GradleException("Missing keystore_base64 in app/src/debug/secrets.json")
-val devStorePassword = devSigning["store_password"] as? String
-    ?: throw GradleException("Missing store_password in app/src/debug/secrets.json")
-val devKeyAlias = devSigning["key_alias"] as? String
-    ?: throw GradleException("Missing key_alias in app/src/debug/secrets.json")
-val devKeyPassword = devSigning["key_password"] as? String
-    ?: throw GradleException("Missing key_password in app/src/debug/secrets.json")
-val devKeystoreFile = layout.buildDirectory.file("godelin-signing/godelin-dev.jks").get().asFile
-devKeystoreFile.parentFile.mkdirs()
-devKeystoreFile.writeBytes(Base64.getDecoder().decode(devKeystoreBase64))
 
 val releaseStoreFile = System.getenv("GODELIN_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("GODELIN_RELEASE_STORE_PASSWORD")
@@ -49,13 +28,6 @@ android {
     }
 
     signingConfigs {
-        create("godelinDev") {
-            storeFile = devKeystoreFile
-            storeType = devSigning["store_type"] as? String ?: "JKS"
-            storePassword = devStorePassword
-            keyAlias = devKeyAlias
-            keyPassword = devKeyPassword
-        }
         if (hasReleaseSigning) {
             create("release") {
                 storeFile = file(requireNotNull(releaseStoreFile))
@@ -68,7 +40,8 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("godelinDev")
+            // Uses Android's standard debug keystore unless a stable key is configured externally.
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isMinifyEnabled = false
