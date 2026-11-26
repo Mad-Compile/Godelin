@@ -376,46 +376,7 @@ fun BrowserScreen() {
 
 @Composable
 private fun StartPage(onNavigate: (String) -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            Modifier.size(62.dp).clip(RoundedCornerShape(20.dp)).background(accent),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("g", color = accentInk, fontSize = 43.sp, fontWeight = FontWeight.Black, letterSpacing = (-3).sp)
-        }
-        Spacer(Modifier.height(20.dp))
-        Text("A little more room to think.", color = foreground, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.7).sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(7.dp))
-        Text("The web, without the noise.", color = secondary, fontSize = 14.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(30.dp))
-        Text("QUICK ACCESS", color = secondary, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.4.sp)
-        Spacer(Modifier.height(13.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StartShortcut("Google", Icons.Default.Search) { onNavigate("google.com") }
-            StartShortcut("YouTube", Icons.Default.PlayCircleOutline) { onNavigate("youtube.com") }
-            StartShortcut("Wikipedia", Icons.Default.MenuBook) { onNavigate("wikipedia.org") }
-        }
-        Spacer(Modifier.height(44.dp))
-        Text("GODELIN  ·  BROWSE AT YOUR PACE", color = Color(0xFF62666D), fontSize = 9.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.1.sp)
-    }
-}
-
-@Composable
-private fun StartShortcut(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Column(
-        Modifier.width(88.dp).clip(RoundedCornerShape(14.dp))
-            .background(surface).border(1.dp, line, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick).padding(vertical = 15.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.height(8.dp))
-        Text(label, color = foreground, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-    }
+    GodelinHomeFeed(onNavigate = onNavigate)
 }
 
 @Composable
