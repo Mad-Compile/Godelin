@@ -37,6 +37,8 @@ Godelin is proprietary software. See [LICENSE](LICENSE) for the project terms. T
 
 Stable releases are published as signed APKs on [GitHub Releases](https://github.com/Mad-Compile/Godelin/releases). Godelin checks for updates at most once per day when opened, marks the menu when a stable update is available, and also supports **More options → Check for updates** for a manual check. Downloads begin only after the user chooses them. Before handing the APK to Android, Godelin verifies its SHA-256 checksum, package identity, increasing version code, and signing certificate against the installed app. Android's package installer always presents the final installation confirmation.
 
+This updater is for Godelin's direct GitHub APK distribution. Do not publish this same build to Google Play: Play policy prohibits using `REQUEST_INSTALL_PACKAGES` for an app's self-updates. A future Play distribution must use Google Play's update mechanism and a Play-specific manifest/build variant.
+
 ### One-time signing-key setup (required before the first stable release)
 
 The release signing key is permanent. Every future update must be signed with the same key. Losing it means existing stable installs cannot receive in-place updates. Keep offline backups and restrict access to the key and its passwords.
