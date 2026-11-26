@@ -79,7 +79,10 @@ private sealed interface UpdateState {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun UpdateSheet(onDismiss: () -> Unit) {
+internal fun UpdateSheet(
+    onDismiss: () -> Unit,
+    onAvailabilityChanged: (Boolean) -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateState>(UpdateState.Checking) }
@@ -89,12 +92,16 @@ internal fun UpdateSheet(onDismiss: () -> Unit) {
     LaunchedEffect(checkAttempt) {
         state = UpdateState.Checking
         installHint = null
-        state = withContext(Dispatchers.IO) {
+        val checkedState = withContext(Dispatchers.IO) {
             runCatching { findLatestRelease(context) }
                 .fold(
                     onSuccess = { it },
                     onFailure = { UpdateState.Failed(it.message ?: "Could not check for updates.") }
                 )
+        }
+        state = checkedState
+        if (checkedState !is UpdateState.Failed) {
+            onAvailabilityChanged(checkedState is UpdateState.Available)
         }
     }
 
