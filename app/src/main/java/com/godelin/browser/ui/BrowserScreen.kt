@@ -69,6 +69,8 @@ fun BrowserScreen() {
     var isLoading by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showTabs by remember { mutableStateOf(false) }
+    var showUpdateSheet by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     val activeTab = tabs.firstOrNull { it.id == activeTabId } ?: tabs.first()
     val activeWebView = webViews[activeTabId]
@@ -321,9 +323,45 @@ fun BrowserScreen() {
             SheetAction(Icons.Default.Add, "New tab", "Start a separate browsing session") { showMenu = false; addTab() }
             SheetAction(Icons.Default.Tab, "All tabs", "Switch between open pages") { showMenu = false; showTabs = true }
             SheetAction(Icons.Default.Refresh, "Reload page", "Refresh the current website") { showMenu = false; activeWebView?.reload() }
-            SheetAction(Icons.Default.Settings, "Settings", "Personalise your browser") { showMenu = false }
+            SheetAction(Icons.Default.SystemUpdateAlt, "Check for updates", "Find the latest signed Godelin release") { showMenu = false; showUpdateSheet = true }
+            SheetAction(Icons.Default.Info, "About Godelin", "Publisher, version and ownership") { showMenu = false; showAboutDialog = true }
             Spacer(Modifier.height(22.dp))
         }
+    }
+
+    if (showUpdateSheet) {
+        UpdateSheet(onDismiss = { showUpdateSheet = false })
+    }
+
+    if (showAboutDialog) {
+        val appVersion = remember {
+            runCatching {
+                context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            }.getOrNull() ?: "Unknown"
+        }
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            containerColor = surface,
+            title = { Text("Godelin", color = foreground) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Version $appVersion", color = secondary)
+                    Text("Published by Mad Compile™", color = foreground)
+                    Text("Based in India", color = secondary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Copyright (C) Mad Compile. All Rights Reserved.",
+                        color = secondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("Done")
+                }
+            }
+        )
     }
 
     if (showTabs) {
