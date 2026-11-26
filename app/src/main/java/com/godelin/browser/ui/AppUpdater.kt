@@ -236,6 +236,9 @@ internal fun UpdateSheet(onDismiss: () -> Unit) {
     }
 }
 
+internal fun checkForGodelinUpdate(context: Context): Boolean? =
+    runCatching { findLatestRelease(context) is UpdateState.Available }.getOrNull()
+
 private fun findLatestRelease(context: Context): UpdateState {
     val installedVersion = installedVersionName(context)
     val response = requestText(LATEST_RELEASE_API, accept = "application/vnd.github+json", allow404 = true)
