@@ -12,11 +12,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -52,6 +52,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -147,7 +148,7 @@ fun WallpaperArtwork(
         if (wallpaperId == "custom" && customBitmap != null) {
             Image(
                 bitmap = customBitmap,
-                contentDescription = "Personal browser wallpaper",
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -360,9 +361,11 @@ fun CosmeticsScreen(
                                 if (selected) selectedAccent else Color(0xFF303A35),
                                 RoundedCornerShape(18.dp)
                             )
-                            .clickable {
-                                draft = draft.copy(wallpaperId = choice.id, wallpaperUri = null)
-                            }
+                            .selectable(
+                                selected = selected,
+                                onClick = { draft = draft.copy(wallpaperId = choice.id, wallpaperUri = null) },
+                                role = Role.RadioButton
+                            )
                             .padding(7.dp)
                     ) {
                         Box(Modifier.fillMaxWidth().height(76.dp).clip(RoundedCornerShape(12.dp))) {
@@ -396,7 +399,7 @@ fun CosmeticsScreen(
                         Modifier.weight(1f).clip(RoundedCornerShape(15.dp))
                             .background(if (selected) Color(0xFF202A26) else Color(0xFF141A18))
                             .border(1.dp, if (selected) choice.color.copy(alpha = 0.85f) else Color(0xFF29332F), RoundedCornerShape(15.dp))
-                            .clickable { draft = draft.copy(accentId = choice.id) }
+                            .selectable(selected = selected, onClick = { draft = draft.copy(accentId = choice.id) }, role = Role.RadioButton)
                             .padding(vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
