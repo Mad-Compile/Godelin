@@ -86,9 +86,12 @@ fun BrowserScreen() {
     var showTabs by remember { mutableStateOf(false) }
     var showUpdateSheet by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showCosmetics by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     val addressFocusRequester = remember { FocusRequester() }
     val context = LocalContext.current
+    var cosmetics by remember(context) { mutableStateOf(loadCosmetics(context)) }
+    val wallpaperBitmap = rememberWallpaperBitmap(cosmetics.wallpaperUri)
     val updatePreferences = remember(context) {
         context.getSharedPreferences("godelin_updates", android.content.Context.MODE_PRIVATE)
     }
@@ -190,10 +193,11 @@ fun BrowserScreen() {
         isLoading = false
     }
 
-    BackHandler(enabled = showMenu || showTabs || activeWebView?.canGoBack() == true) {
+    BackHandler(enabled = showMenu || showTabs || showCosmetics || activeWebView?.canGoBack() == true) {
         when {
             showMenu -> showMenu = false
             showTabs -> showTabs = false
+            showCosmetics -> showCosmetics = false
             else -> activeWebView?.goBack()
         }
     }
@@ -316,6 +320,7 @@ fun BrowserScreen() {
             Spacer(Modifier.height(12.dp))
             SheetAction(Icons.Default.Add, "New tab", "Start a separate browsing session") { showMenu = false; addTab() }
             SheetAction(Icons.Default.Tab, "All tabs", "Switch between open pages") { showMenu = false; showTabs = true }
+            SheetAction(Icons.Default.Palette, "Cosmetics", "Choose your new-tab background and accent") { showMenu = false; showCosmetics = true }
             SheetAction(Icons.Default.ArrowForward, "Forward page", "Move to the next page in this tab") { showMenu = false; activeWebView?.goForward() }
             SheetAction(Icons.Default.Refresh, "Reload page", "Refresh the current website") { showMenu = false; activeWebView?.reload() }
             SheetAction(Icons.Default.SystemUpdateAlt, "Check for updates", "Find the latest signed Godelin release") { showMenu = false; showUpdateSheet = true }
@@ -380,6 +385,23 @@ fun BrowserScreen() {
                 onClose = { closeTab(it) },
                 onNewTab = { addTab() },
                 onDismiss = { showTabs = false }
+            )
+        }
+    }
+
+    if (showCosmetics) {
+        Dialog(
+            onDismissRequest = { showCosmetics = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            CosmeticsScreen(
+                settings = cosmetics,
+                onApply = { updated ->
+                    cosmetics = updated
+                    saveCosmetics(context, updated)
+                    showCosmetics = false
+                },
+                onDismiss = { showCosmetics = false }
             )
         }
     }
