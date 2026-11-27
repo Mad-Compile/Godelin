@@ -387,7 +387,7 @@ fun CosmeticsScreen(
             Spacer(Modifier.height(21.dp))
             Text("Accent colour", color = Color(0xFFF0F4F2), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(3.dp))
-            Text("A small detail carried through your browser.", color = Color(0xFF8D9A94), fontSize = 12.sp)
+            Text("A small detail for your new tab.", color = Color(0xFF8D9A94), fontSize = 12.sp)
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 accentChoices.forEach { choice ->
