@@ -258,7 +258,10 @@ fun BrowserScreen() {
                     onSearch = {
                         addressFocusRequester.requestFocus()
                         keyboard?.show()
-                    }
+                    },
+                    wallpaperId = cosmetics.wallpaperId,
+                    accentId = cosmetics.accentId,
+                    wallpaperBitmap = wallpaperBitmap
                 )
             }
 
