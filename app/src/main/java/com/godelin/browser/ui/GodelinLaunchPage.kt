@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -46,13 +47,28 @@ private val launchBlue = Color(0xFF7185F5)
 private val launchPink = Color(0xFFFFA6C5)
 
 @Composable
-fun GodelinLaunchPage(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, onSearch: () -> Unit) {
+fun GodelinLaunchPage(
+    onNavigate: (String) -> Unit,
+    onAddShortcut: () -> Unit,
+    onSearch: () -> Unit,
+    wallpaperId: String = "aurora",
+    accentId: String = "mint",
+    wallpaperBitmap: ImageBitmap? = null
+) {
     var showQuickPanel by remember { mutableStateOf(true) }
+    val accentColor = cosmeticsAccentColor(accentId)
     Box(Modifier.fillMaxSize().background(launchBg)) {
+        WallpaperArtwork(
+            modifier = Modifier.fillMaxSize(),
+            wallpaperId = wallpaperId,
+            accentId = accentId,
+            customBitmap = wallpaperBitmap,
+            dim = 0.68f
+        )
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=20.dp).padding(top=16.dp,bottom=24.dp)) {
             Row(verticalAlignment=Alignment.CenterVertically) {
                 Row(Modifier.weight(1f),verticalAlignment=Alignment.CenterVertically) {
-                    Icon(Icons.Default.Shield,null,tint=launchMint,modifier=Modifier.size(20.dp))
+                    Icon(Icons.Default.Shield,null,tint=accentColor,modifier=Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Privacy overview",color=launchText,fontSize=14.sp,fontWeight=FontWeight.SemiBold)
                 }
@@ -60,21 +76,21 @@ fun GodelinLaunchPage(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, o
             }
             Spacer(Modifier.height(18.dp))
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                PrivacyMetric("Protection","Standard","No tracker blocking",Modifier.weight(1f))
+                PrivacyMetric("Protection","Standard","No tracker blocking",Modifier.weight(1f),accentColor)
                 PrivacyMetric("Data saved","—","Not measured",Modifier.weight(1f))
                 PrivacyMetric("Time saved","—","Not measured",Modifier.weight(1f))
             }
             Spacer(Modifier.height(22.dp))
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Text("Quick access",color=launchText,fontSize=20.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
-                Text("EDIT",color=launchMuted,fontSize=11.sp,letterSpacing=1.2.sp,modifier=Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick=onAddShortcut).padding(10.dp))
+                Text("EDIT",color=accentColor,fontSize=11.sp,letterSpacing=1.2.sp,modifier=Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick=onAddShortcut).padding(10.dp))
             }
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                Shortcut("Add new",Icons.Default.Add,launchMint,Modifier.weight(1f),onAddShortcut)
+                Shortcut("Add new",Icons.Default.Add,accentColor,Modifier.weight(1f),onAddShortcut)
                 Shortcut("YouTube",Icons.Default.PlayArrow,launchPink,Modifier.weight(1f)){onNavigate("youtube.com")}
                 Shortcut("Wikipedia",Icons.Default.Language,launchBlue,Modifier.weight(1f)){onNavigate("wikipedia.org")}
-                Shortcut("Bookmarks",Icons.Default.BookmarkBorder,launchMint,Modifier.weight(1f)){onNavigate("https://www.google.com")}
+                Shortcut("Bookmarks",Icons.Default.BookmarkBorder,accentColor,Modifier.weight(1f)){onNavigate("https://www.google.com")}
             }
             Spacer(Modifier.height(24.dp))
             Text("Your browser,\nwithout the noise.",color=launchText,fontSize=29.sp,lineHeight=35.sp,fontWeight=FontWeight.Bold,letterSpacing=(-1).sp)
@@ -99,9 +115,9 @@ fun GodelinLaunchPage(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, o
                     Text("Explore at your own pace",color=launchMuted,fontSize=12.sp)
                 }
                 Row(Modifier.align(Alignment.TopStart).padding(14.dp).clip(CircleShape).background(Color(0xFF202938)).padding(horizontal=10.dp,vertical=7.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Icon(Icons.Default.Shield,null,tint=launchMint,modifier=Modifier.size(14.dp))
+                    Icon(Icons.Default.Shield,null,tint=accentColor,modifier=Modifier.size(14.dp))
                     Spacer(Modifier.width(5.dp))
-                    Text("YOUR SPACE",color=launchMint,fontSize=10.sp,letterSpacing=1.sp,fontWeight=FontWeight.SemiBold)
+                    Text("YOUR SPACE",color=accentColor,fontSize=10.sp,letterSpacing=1.sp,fontWeight=FontWeight.SemiBold)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -118,7 +134,7 @@ fun GodelinLaunchPage(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, o
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
                         Text("HIDE",color=Color(0xFF596661),fontSize=12.sp,fontWeight=FontWeight.SemiBold,modifier=Modifier.clip(RoundedCornerShape(12.dp)).clickable{showQuickPanel=false}.padding(11.dp))
-                        Row(Modifier.clip(RoundedCornerShape(22.dp)).background(Color(0xFF4654D5)).clickable(onClick=onSearch).padding(horizontal=17.dp,vertical=11.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Row(Modifier.clip(RoundedCornerShape(22.dp)).background(accentColor).clickable(onClick=onSearch).padding(horizontal=17.dp,vertical=11.dp),verticalAlignment=Alignment.CenterVertically) {
                             Icon(Icons.Default.Search,null,tint=Color.White,modifier=Modifier.size(17.dp));Spacer(Modifier.width(6.dp))
                             Text("Start searching",color=Color.White,fontSize=13.sp,fontWeight=FontWeight.SemiBold)
                         }
@@ -133,9 +149,9 @@ fun GodelinLaunchPage(onNavigate: (String) -> Unit, onAddShortcut: () -> Unit, o
 }
 
 @Composable
-private fun PrivacyMetric(title:String,value:String,detail:String,modifier:Modifier=Modifier) {
+private fun PrivacyMetric(title:String,value:String,detail:String,modifier:Modifier=Modifier,highlightColor:Color=launchMint) {
     Column(modifier.padding(vertical=10.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-        Text(value,color=if(title=="Protection")launchMint else launchBlue,fontSize=18.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
+        Text(value,color=if(title=="Protection")highlightColor else launchBlue,fontSize=18.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
         Text(title,color=launchText,fontSize=11.sp,fontWeight=FontWeight.Medium,maxLines=1)
         Text(detail,color=launchMuted,fontSize=9.sp,maxLines=1)
     }
